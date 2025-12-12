@@ -1,0 +1,7 @@
+node_modules/
+output/
+temp/
+*.gif
+*.png
+.DS_Store
+
