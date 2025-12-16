@@ -1,46 +1,64 @@
-# 汉字笔顺动画GIF生成器
+# Chinese Stroke Order Generator (GIF)
 
-基于 Hanzi Writer + Puppeteer 生成汉字笔顺动画GIF。
+> 🌟 **Live Demo & Full Dictionary:** Check out **[HanziStroke.com](https://hanzistroke.com)** - The best place to look up Chinese character stroke order, meanings, and HSK levels.
+>
+> 🖨️ **Need Printable Worksheets?** - This tool generates screen animations. For generating **custom PDF writing practice worksheets**, please use our [Worksheet Maker on HanziStroke.com](https://www.hanzistroke.com/worksheet-generator).
 
-## 安装依赖
+A tool to generate Chinese character stroke order animation GIFs using Hanzi Writer + Puppeteer.
+
+## Installation
 
 ```bash
 npm install
 ```
 
-## 使用方法
+## Usage
 
-生成指定汉字的笔顺动画GIF：
+Generate stroke order animation GIF for a specific Chinese character:
 
 ```bash
 npm run generate 中
 ```
 
-或者直接运行：
+Or run directly:
 
 ```bash
 node generate.js 中
 ```
 
-如果不指定汉字，默认生成"中"字的动画。
+If no character is specified, it will generate the animation for "中" by default.
 
-## 输出
+Generate multiple characters from a JSON file (simple array format):
 
-生成的GIF文件保存在 `output/` 目录下，文件名格式为 `{汉字}.gif`
+```bash
+npm run batch-generate
+```
 
-## 配置
+`input/characters.json` example:
 
-可以在 `generate.js` 中修改以下配置：
+```json
+["中", "文"]
+```
 
-- `width`: 画布宽度（默认200）
-- `height`: 画布高度（默认200）
-- `fps`: 帧率（默认15）
-- `outputDir`: 输出目录（默认./output）
+The optional second argument is concurrency (default: 3).
 
-## 技术栈
+## Output
 
-- **Hanzi Writer**: 汉字笔顺动画渲染
-- **Puppeteer**: 无头浏览器，用于录制动画
-- **GIFEncoder**: GIF文件生成
-- **Canvas**: 图像处理
+Generated GIF files are saved in the `output/` directory with the filename format `{character}.gif`
+
+## Configuration
+
+You can modify the following settings in `generate.js`:
+
+- `width`: Canvas width (default: 200)
+- `height`: Canvas height (default: 200)
+- `fps`: Frame rate (default: 15)
+- `outputDir`: Output directory (default: ./output)
+
+## Tech Stack
+
+- **Hanzi Writer**: Chinese character stroke order animation rendering
+- **Puppeteer**: Headless browser for recording animations
+- **GIFEncoder**: GIF file generation
+- **Canvas**: Image processing
 

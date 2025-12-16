@@ -202,8 +202,16 @@ function getCharactersFromJSON(jsonPath) {
     try {
         const jsonData = fs.readFileSync(jsonPath, 'utf-8');
         const data = JSON.parse(jsonData);
-        
-        // 提取所有word字段
+
+        // 支持简化格式: ["中","文"]
+        if (Array.isArray(data)) {
+            const characters = data
+                .filter(item => typeof item === 'string' && item.trim())
+                .map(item => item.trim());
+            return [...new Set(characters)];
+        }
+
+        // 兼容旧格式: { data: { records: [ { word: "中" } ] } }
         const words = [];
         if (data.data && data.data.records) {
             data.data.records.forEach(record => {
@@ -212,8 +220,7 @@ function getCharactersFromJSON(jsonPath) {
                 }
             });
         }
-        
-        // 去重并返回
+
         return [...new Set(words)];
     } catch (error) {
         console.error('读取JSON文件失败:', error);
@@ -283,7 +290,7 @@ async function main() {
         // 从JSON文件读取汉字列表
         console.log(`从文件读取汉字列表: ${jsonPath}`);
         characters = getCharactersFromJSON(jsonPath);
-        console.log(`找到 ${characters.length} 个汉字`);
+        console.log(`找到 ${characters.length} 个汉字: ${characters.join(', ')}`);
         console.log(`并发数: ${concurrency}`);
     } else {
         // 单个汉字模式
