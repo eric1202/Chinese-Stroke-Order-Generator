@@ -296,43 +296,109 @@
     <script>
         const API_LIST = '/api/list';
         const API_GENERATE = '/api/generate';
+        const STATIC_MANIFEST = 'output/data.json';
+
+        // Detect if we are running in static mode (no backend)
+        let isStaticMode = false;
 
         async function loadGallery() {
             try {
-                const response = await fetch(API_LIST);
-                const files = await response.json();
+                let files = [];
+                try {
+                    // 1. Try dynamic API first
+                    const response = await fetch(API_LIST);
+                    if (!response.ok) throw new Error('API not available');
+                    files = await response.json();
+                } catch (e) {
+                    // 2. Fallback to static data.json
+                    console.log('Backend not detected, switching to static mode...');
+                    isStaticMode = true;
+                    updateUIForStaticMode();
 
-                const gallery = document.getElementById('gallery');
-                gallery.innerHTML = '';
-
-                if (files.length === 0) {
-                    gallery.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6B7280;">No animations generated yet. Try generating one!</div>';
-                    return;
+                    const response = await fetch(STATIC_MANIFEST);
+                    if (!response.ok) {
+                        throw new Error('Static data not found. Run "npm run update-static" before deploying.');
+                    }
+                    files = await response.json();
                 }
 
-                files.forEach(file => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.onclick = () => openModal(file.url);
-
-                    // Parse character from filename if possible
-                    const charName = file.name.replace('.gif', '');
-
-                    card.innerHTML = `
-                        <img src="${file.url}" alt="${charName}" loading="lazy">
-                        <div class="info">
-                            <span class="card-title">${charName}</span>
-                            <span style="font-size: 0.8rem; color: #666;">GIF</span>
-                        </div>
-                    `;
-                    gallery.appendChild(card);
-                });
+                renderGallery(files);
             } catch (error) {
                 console.error('Failed to load gallery:', error);
+                document.getElementById('gallery').innerHTML =
+                    `<div style="grid-column: 1/-1; text-align: center; color: #6B7280; padding: 20px;">
+                        <p>Could not load gallery.</p>
+                        <small style="opacity: 0.7">${error.message}</small>
+                    </div>`;
             }
         }
 
+        function updateUIForStaticMode() {
+            const controls = document.querySelector('.controls');
+            const h1 = document.querySelector('h1');
+            const subtitle = document.querySelector('.subtitle');
+
+            // Add a badge or message
+            const badge = document.createElement('div');
+            badge.innerHTML = '<b>Static Demo Mode</b> - Generation disabled';
+            badge.style.cssText = 'background: #FEF3C7; color: #D97706; padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; margin-bottom: 20px; display: inline-block; font-weight: 500;';
+
+            // Insert after header
+            document.querySelector('header').appendChild(badge);
+
+            // Disable inputs
+            const input = document.getElementById('charInput');
+            const btn = document.getElementById('generateBtn');
+
+            input.disabled = true;
+            input.placeholder = "Generation not available in static demo";
+            btn.disabled = true;
+            btn.style.backgroundColor = '#9CA3AF';
+            btn.textContent = "Disabled";
+
+            // Optional: Modify title to indicate demo
+            // document.title += " (Demo)";
+        }
+
+        function renderGallery(files) {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            if (!files || files.length === 0) {
+                gallery.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6B7280;">No animations found.</div>';
+                return;
+            }
+
+            files.forEach(file => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Adjust URL handling for static vs dynamic
+                // In static mode, raw URL from JSON is "output/filename.gif" which is correct relative path
+                // In dynamic mode, server returns "/output/filename.gif"
+                const imgUrl = file.url;
+
+                card.onclick = () => openModal(imgUrl);
+
+                // Parse character from filename if possible
+                const charName = file.name.replace('.gif', '');
+
+                card.innerHTML = `
+                    <img src="${imgUrl}" alt="${charName}" loading="lazy">
+                    <div class="info">
+                        <span class="card-title">${charName}</span>
+                        <span style="font-size: 0.8rem; color: #666;">GIF</span>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
         async function generateChar() {
+            if (isStaticMode) {
+                alert('Generation is disabled in Static Demo Mode.');
+                return;
+            }
+
             const input = document.getElementById('charInput');
             const char = input.value.trim();
 
