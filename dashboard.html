@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Stroke Order Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Outfit:wght@400;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-sub: #6B7280;
+            --red-accent: #EF4444;
+            --input-border: #D1D5DB;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4F46E5 0%, #EC4899 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-sub);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 600px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .controls:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 18px;
+            border: 2px solid var(--input-border);
+            border-radius: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background-color: var(--primary);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: #9CA3AF;
+            cursor: not-allowed;
+        }
+
+        /* Gallery Grid */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            position: relative;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 10px;
+            background-color: #fff;
+        }
+
+        .card .info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .info {
+            transform: translateY(0);
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #E5E7EB;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .status-text {
+            margin-top: 20px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Modal for preview */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+            padding: 10px;
+            position: relative;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Chinese Stroke Order Generator</h1>
+        <p class="subtitle">Generate and view beautiful stroke order animations.</p>
+    </header>
+
+    <div class="controls">
+        <input type="text" id="charInput" placeholder="Enter a Chinese character (e.g. 中)" maxlength="1">
+        <button id="generateBtn" onclick="generateChar()">Generate GIF</button>
+    </div>
+
+    <div class="gallery" id="gallery">
+        <!-- Items will be injected here -->
+    </div>
+
+    <div class="loading-overlay" id="loader">
+        <div class="spinner"></div>
+        <p class="status-text" id="loaderText">Generating... this may take a moment</p>
+    </div>
+
+    <div class="modal" id="previewModal" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <img id="previewImg" src="" alt="Preview">
+        </div>
+    </div>
+
+    <script>
+        const API_LIST = '/api/list';
+        const API_GENERATE = '/api/generate';
+
+        async function loadGallery() {
+            try {
+                const response = await fetch(API_LIST);
+                const files = await response.json();
+
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = '';
+
+                if (files.length === 0) {
+                    gallery.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6B7280;">No animations generated yet. Try generating one!</div>';
+                    return;
+                }
+
+                files.forEach(file => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.onclick = () => openModal(file.url);
+
+                    // Parse character from filename if possible
+                    const charName = file.name.replace('.gif', '');
+
+                    card.innerHTML = `
+                        <img src="${file.url}" alt="${charName}" loading="lazy">
+                        <div class="info">
+                            <span class="card-title">${charName}</span>
+                            <span style="font-size: 0.8rem; color: #666;">GIF</span>
+                        </div>
+                    `;
+                    gallery.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Failed to load gallery:', error);
+            }
+        }
+
+        async function generateChar() {
+            const input = document.getElementById('charInput');
+            const char = input.value.trim();
+
+            if (!char) {
+                alert('Please enter a character');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loaderText');
+
+            loader.classList.add('active');
+            loaderText.textContent = `Generating "${char}"...`;
+
+            try {
+                const response = await fetch(API_GENERATE, {
+                    method: 'POST',
+                    body: JSON.stringify({ char }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    input.value = '';
+                    await loadGallery();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Connection failed');
+                console.error(error);
+            } finally {
+                loader.classList.remove('active');
+            }
+        }
+
+        function openModal(url) {
+            const modal = document.getElementById('previewModal');
+            const img = document.getElementById('previewImg');
+            img.src = url;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
+        // Handle Enter key
+        document.getElementById('charInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                generateChar();
+            }
+        });
+
+        // Initial load
+        loadGallery();
+    </script>
+</body>
+
+</html>

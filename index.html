@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,24 +11,29 @@
             padding: 0;
             box-sizing: border-box;
         }
-        html, body {
+
+        html,
+        body {
             width: 100%;
             height: 100%;
             margin: 0;
             padding: 0;
-            background: #87CEEB; /* 浅蓝色背景 */
+            background: #87CEEB;
+            /* 浅蓝色背景 */
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
             overflow: hidden;
         }
+
         #character-container {
             width: 500px;
             height: 500px;
             position: relative;
             z-index: 2;
         }
+
         /* 背景重复文字水印 - 十字线 */
         .watermark-bg {
             position: fixed;
@@ -39,14 +45,17 @@
             pointer-events: none;
             overflow: visible;
         }
+
         .watermark-line {
             position: absolute;
             color: rgba(255, 255, 255, 0.15);
-            font-size: 12px; /* 很小的字体 */
+            font-size: 12px;
+            /* 很小的字体 */
             font-weight: bold;
             font-family: Arial, sans-serif;
             white-space: nowrap;
         }
+
         .watermark-line.horizontal {
             /* 水平线 - 横线 */
             top: 50%;
@@ -55,6 +64,7 @@
             transform: translateY(-50%);
             text-align: center;
         }
+
         .watermark-line.vertical {
             /* 垂直线 - 竖线 */
             left: 50%;
@@ -66,6 +76,7 @@
             align-items: center;
             justify-content: center;
         }
+
         /* 右下角水印 */
         .watermark-corner {
             position: fixed;
@@ -73,26 +84,28 @@
             right: 10px;
             z-index: 3;
             color: white;
-            font-size: 18px; /* 增大字体 */
+            font-size: 18px;
+            /* 增大字体 */
             font-family: Arial, sans-serif;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
+
 <body>
     <!-- 背景重复水印 -->
     <div class="watermark-bg" id="watermark-bg"></div>
-    
+
     <!-- 右下角水印 -->
-    <div class="watermark-corner">hanzistroke.com</div>
-    
+    <div class="watermark-corner"></div>
+
     <div id="character-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@2.2.2/dist/hanzi-writer.min.js"></script>
     <script>
         // 从URL参数获取汉字
         const urlParams = new URLSearchParams(window.location.search);
         const character = urlParams.get('char') || '中';
-        
+
         const writer = HanziWriter.create('character-container', character, {
             width: 500,
             height: 500,
@@ -106,21 +119,21 @@
             strokeAnimationDuration: 1200, // 每个笔画的动画时长，让动画更慢
             radicalColor: '#FF0000' // 红色笔画高亮
         });
-        
+
         // 创建背景重复水印 - 十字线
         function createWatermarkBg() {
             const bg = document.getElementById('watermark-bg');
             const text = 'hanzistroke';
-            
+
             // 等待一下确保视口尺寸已确定
             setTimeout(() => {
                 // 获取视口尺寸
                 const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 540;
                 const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 540;
-                
+
                 // 清空之前的水印
                 bg.innerHTML = '';
-                
+
                 // 创建水平线（横线）
                 const horizontalLine = document.createElement('div');
                 horizontalLine.className = 'watermark-line horizontal';
@@ -128,7 +141,7 @@
                 const repeatCount = Math.ceil(viewportWidth / 80) + 2; // 80px是大约的文字宽度
                 horizontalLine.textContent = (text + ' ').repeat(repeatCount);
                 bg.appendChild(horizontalLine);
-                
+
                 // 创建垂直线（竖线）
                 const verticalLine = document.createElement('div');
                 verticalLine.className = 'watermark-line vertical';
@@ -138,27 +151,27 @@
                 bg.appendChild(verticalLine);
             }, 100);
         }
-        
+
         // 页面加载后创建水印
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', createWatermarkBg);
         } else {
             createWatermarkBg();
         }
-        
+
         // 暴露writer对象供外部访问
         window.writer = writer;
-        
+
         // 用于通知外部动画已准备好
         window.animationReady = false;
         window.animationStarted = false;
         window.animationProgress = 0;
-        
+
         // hanzi-writer的create方法已经加载了字符，等待一小段时间确保渲染完成
         setTimeout(() => {
             window.animationReady = true;
         }, 800);
     </script>
 </body>
-</html>
 
+</html>
